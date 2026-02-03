@@ -1,2 +1,2 @@
 [database]
-url = "postgresql://postgres:postgres@localhost:5432/isacdb"
+url = "postgresql://postgres:postgres@localhost:5432/culturelist"

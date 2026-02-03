@@ -32,11 +32,26 @@ config = "0.15.19"
 # async
 tokio = { version = "1.49.0", features = ["full"] }
 
+# server
+tower-http = { version = "0.6.8", features = ["full"] }
+axum = { version = "0.8.8", features = ["macros", "multipart"] }
+axum_session = { version = "0.17.1", features = ["advanced"] }
+axum_session_sqlx = { version = "0.6.1", features = ["postgres"] }
+tower = "0.5.3"
+
+# frontend
+askama_web = { version = "0.15.1", features = ["axum-0.8", "tracing-0.1"] }
+askama = { version = "0.15.4", features = ["full"] }
+datastar = { version = "0.3.1", features = ["axum", "tracing"] }
+
 # utils
 chrono = { version = "0.4.43", features = ["serde"] }
-uuid = { version = "1.20.0", features = ["serde"] }
+uuid = { version = "1.20.0", features = ["serde", "v4"] }
 argon2 = "0.5.3"
 validator = { version = "0.20.0", features = ["derive"] }
+
+# authentication
+jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 
 # database
 [dependencies.sqlx]
@@ -51,3 +66,12 @@ features = [
     "migrate",
     "tls-rustls",
 ]
+
+[dev-dependencies]
+fake = { version = "4.4.0", features = [
+    "chrono",
+    "chrono-tz",
+    "derive",
+    "email_address",
+    "uuid",
+] }

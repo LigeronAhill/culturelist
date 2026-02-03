@@ -1,113 +1,105 @@
 # AGENTS.md - Development Guidelines for Culturelist
 
-This document provides guidelines for agentic coding agents working in the Culturelist Rust codebase.
-
-## Project Overview
-
-Culturelist is a book tracking application built with Rust, using PostgreSQL for data storage. The project follows a clean modular architecture with async/await patterns throughout.
+Book tracking application built with Rust, PostgreSQL, and async/await patterns.
 
 **Stack**: Rust (edition 2024), Tokio, SQLx, PostgreSQL, Tracing, Config
 **Architecture**: Library + Binary pattern with modular components
 
-## Build, Lint, and Test Commands
+## Commands
 
-The project uses Just as a task runner. All commands should be executed via `just <command>`:
+Use Just as task runner: `just <command>`
 
-### Development Commands
+### Development
 ```bash
-just run              # Run the application once
-just dev              # Watch mode - auto-restart on file changes
-just default          # Same as dev (default command)
+just run              # Run once
+just dev              # Watch mode (default)
 ```
 
-### Testing Commands
+### Testing
 ```bash
-just test             # Run all tests with output (--nocapture)
-just coverage         # Generate test coverage report (cargo tarpaulin)
+just test             # Run all tests (--nocapture)
+just coverage         # Coverage report
+cargo test test_name -- --nocapture  # Single test
 ```
 
-**Running a single test**:
+### Code Quality
 ```bash
-cargo test test_name -- --nocapture
-# For a specific module:
-cargo test module::test_name -- --nocapture
+just lint             # Clippy with auto-fix
+just fmt              # Format code
+just audit            # Security audit
+just check-unused     # Unused deps (requires nightly)
+just check-quality    # Run all quality checks
 ```
 
-### Code Quality Commands
+### Database
 ```bash
-just lint             # Run clippy with auto-fix
-just fmt              # Format code with rustfmt
-just audit            # Security audit with cargo audit
-just check-unused     # Check unused dependencies (requires nightly)
-just check-quality    # Run all quality checks: lint, fmt, audit, check-unused, coverage
+just create-db        # Create database
+just add-migration TABLE  # Add migration
+just run-migration    # Run migrations
 ```
 
-### Database Commands
+### Git Workflow
 ```bash
-just create-db        # Create the database
-just drop-db          # Drop the database
-just add-migration TABLE  # Add new migration for TABLE
-just run-migration    # Run pending migrations
-just revert-migration # Revert last migration
+just prepare          # Pre-commit checks
+just commit NAME      # Stage and commit
 ```
 
-### Git Workflow Commands
-```bash
-just prepare          # Run lint, fmt, and check-quality before commit
-just commit NAME      # Stage all changes and commit (requires prepare first)
-just push             # Push changes to remote
-```
+## API Routes
+
+### Authentication Routes
+- **POST /api/v1/auth/signin** - User sign in
+- **POST /api/v1/auth/signup** - User sign up
+
+### User Management Routes
+- **GET /api/v1/users/** - List users (with pagination and search)
+- **POST /api/v1/users/** - Create user
+- **GET /api/v1/users/{id}** - Get user by ID
+- **PUT /api/v1/users/{id}** - Update user
+- **DELETE /api/v1/users/{id}** - Delete user
+
+### Authentication Features
+- JWT token-based authentication (7-day expiration)
+- Password hashing with Argon2
+- Email validation and password complexity requirements
+- Email uniqueness checks
 
 ## Code Style Guidelines
 
 ### Import Style
 ```rust
-// External crates first, grouped by functionality
 use anyhow::Result;
 use config::Config;
 use sqlx::{Pool, Postgres};
-
-// Local modules
 use crate::configuration;
 use crate::storage;
 ```
 
-**Rules**:
-- External crates first, then local modules
-- Group related imports together
-- Use specific imports rather than `use crate::*`
-- One `use` statement per line for multiple items from same crate
+**Rules**: External crates first, then local modules; group related imports; use specific imports; one `use` per line.
 
 ### Naming Conventions
 - **Functions**: `snake_case` (e.g., `get_pool`, `init_configuration`)
 - **Structs/Enums**: `PascalCase` (e.g., `App`, `DatabaseConfig`)
-- **Constants**: `SCREAMING_SNAKE_CASE` (when needed)
+- **Constants**: `SCREAMING_SNAKE_CASE`
 - **Files**: `snake_case.rs` (e.g., `configuration.rs`, `logger.rs`)
-- **Modules**: `snake_case` for private modules, `snake_case` for public
+- **Modules**: `snake_case`
 
 ### Error Handling Pattern
 ```rust
 use anyhow::Result;
 
 pub async fn function_name(param: &str) -> Result<String> {
-    // Implementation
     let result = some_operation().await?;
     Ok(result)
 }
 ```
 
-**Rules**:
-- Always use `anyhow::Result<T>` for public functions
-- Use `?` operator for error propagation
-- Return `Result<()>` for functions without meaningful return values
-- Include context with `.context("description")` when helpful
+**Rules**: Always use `anyhow::Result<T>` for public functions; use `?` operator; return `Result<()>` for void functions; include context with `.context()` when helpful.
 
 ### Module Organization
 ```rust
-// lib.rs - Public API
 pub mod configuration;
 pub mod logger;
-mod storage;  // Private module
+mod storage;
 
 pub async fn build(config: &Config) -> Result<App> {
     // Public factory function
@@ -118,11 +110,7 @@ pub struct App {
 }
 ```
 
-**Rules**:
-- Export public modules from `lib.rs`
-- Keep implementation details private
-- Use `pub(crate)` for internal public APIs
-- Group related functionality in modules
+**Rules**: Export public modules from `lib.rs`; keep implementation details private; use `pub(crate)` for internal APIs; group related functionality.
 
 ### Async/Await Patterns
 ```rust
@@ -135,11 +123,7 @@ async fn main() -> anyhow::Result<()> {
 }
 ```
 
-**Rules**:
-- Use `#[tokio::main]` for async main functions
-- Always use `.await?` for async operations that can fail
-- Keep async functions small and focused
-- Use `async fn` for any function that does I/O
+**Rules**: Use `#[tokio::main]` for async main; always use `.await?` for async operations; keep async functions small; use `async fn` for I/O operations.
 
 ### Database Patterns
 ```rust
@@ -154,18 +138,12 @@ pub async fn get_pool(config: &Config) -> Result<Pool<Postgres>> {
 }
 ```
 
-**Rules**:
-- Use SQLx for all database operations
-- Always run migrations on startup
-- Use connection pooling with reasonable limits (8 is current default)
-- Use compile-time checked queries when possible
-- Handle database errors with `anyhow::Result`
+**Rules**: Use SQLx for all database operations; always run migrations on startup; use connection pooling (default 8); use compile-time checked queries; handle errors with `anyhow::Result`.
 
 ### Configuration Pattern
 ```rust
 pub fn init() -> Result<Config, ConfigError> {
     let env = std::env::var("APP_ENVIRONMENT").unwrap_or("development".into());
-    // Build hierarchical config: base -> environment -> env vars
     Config::builder()
         .add_source(config::File::from(base).required(true))
         .add_source(config::File::from(file).required(false))
@@ -174,11 +152,7 @@ pub fn init() -> Result<Config, ConfigError> {
 }
 ```
 
-**Rules**:
-- Use hierarchical configuration: base → environment → environment variables
-- Prefix environment variables with `APP_`
-- Default to "development" environment
-- Use `APP_ENVIRONMENT` to specify environment
+**Rules**: Use hierarchical config: base → environment → env vars; prefix env vars with `APP_`; default to "development"; use `APP_ENVIRONMENT` to specify environment.
 
 ### Logging Pattern
 ```rust
@@ -186,7 +160,6 @@ pub fn init(config: &Config) -> Result<()> {
     let env = config.get_string("app.environment").unwrap_or("development".into());
     match env.as_str() {
         "production" => {
-            // ERROR level for production
             let subscriber = tracing_subscriber::FmtSubscriber::builder()
                 .with_max_level(tracing::Level::ERROR)
                 .with_file(true)
@@ -196,42 +169,29 @@ pub fn init(config: &Config) -> Result<()> {
                 .finish();
             tracing::subscriber::set_global_default(subscriber)?;
         }
-        _ => {
-            // INFO level for development
-            // ... similar setup with INFO level
-        }
+        _ => { /* INFO level for development */ }
     }
     tracing::info!("logger initialized");
     Ok(())
 }
 ```
 
-**Rules**:
-- Use tracing for all logging
-- Production: ERROR level only
-- Development/Default: INFO level
-- Include file and line numbers
-- Use pretty formatting
-- Log initialization completion
+**Rules**: Use tracing for logging; production: ERROR level only; development: INFO level; include file/line numbers; use pretty formatting.
 
-### Code Organization Best Practices
+### Code Organization
 
 **File Structure**:
 ```
 src/
-├── lib.rs              # Library root, exports public modules
+├── lib.rs              # Library root
 ├── main.rs             # Binary entry point
 ├── configuration.rs    # Configuration management
 ├── logger.rs          # Logging setup
 └── storage/
-    └── mod.rs         # Database operations and migrations
+    └── mod.rs         # Database operations
 ```
 
-**Adding New Modules**:
-1. Create `module_name.rs` file
-2. Add `mod module_name;` or `pub mod module_name;` to `lib.rs`
-3. Follow existing patterns for structure and error handling
-4. Add module-specific tests with `#[cfg(test)]`
+**Adding New Modules**: Create `module_name.rs`; add `mod module_name;` or `pub mod module_name;` to `lib.rs`; follow existing patterns; add tests with `#[cfg(test)]`.
 
 ### Testing Guidelines
 - Use Rust's built-in testing framework
@@ -240,15 +200,54 @@ src/
 - Aim for good test coverage (check with `just coverage`)
 - Test both success and error paths
 
+### Database Testing with sqlx::test
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fake::{Fake, Faker};
+    use sqlx::test;
+
+    #[sqlx::test]
+    async fn test_create_user(pool: sqlx::PgPool) -> anyhow::Result<()> {
+        // Run migrations first
+        sqlx::migrate!().run(&pool).await?;
+        
+        let storage = UsersStorage::new(pool);
+        // Test implementation
+        Ok(())
+    }
+}
+```
+
+**Rules**: Always run migrations in test setup; use transaction rollback for isolation; generate realistic test data with fake; test edge cases and error conditions.
+
+### Test Data Generation with fake
+```rust
+use fake::{Fake, Faker};
+use fake::faker::internet::en::{SafeEmail, Username};
+use fake::faker::name::en::{FirstName, LastName};
+
+fn create_fake_user() -> CreateUser {
+    CreateUser {
+        username: Username().fake(),
+        email: SafeEmail().fake(),
+        password: "Password123!".to_string(),
+        first_name: Some(FirstName().fake()),
+        last_name: Some(LastName().fake()),
+        bio: Some(Faker.fake()),
+    }
+}
+```
+
+**Rules**: Use domain-specific fakers when available; ensure generated data meets validation requirements; use consistent data for related tests.
+
 ### Pre-commit Checklist
-Always run `just prepare` before committing:
-1. `just lint` - Fix all clippy warnings
-2. `just fmt` - Ensure consistent formatting
-3. `just check-quality` - Pass all quality checks
+Always run `just prepare` before committing: `just lint` → `just fmt` → `just check-quality`.
 
 ### Environment Setup
-- Install dependencies with `just install-dependencies`
-- Set up PostgreSQL and run `just create-db`
+- Install dependencies: `just install-dependencies`
+- Set up PostgreSQL: `just create-db`
 - Configure `.env` file with database URL
 - Use `just dev` for development with auto-reload
 
@@ -259,5 +258,50 @@ Always run `just prepare` before committing:
 3. **Migrations**: Auto-run on app startup, can be managed manually with SQLx CLI
 4. **Environment**: Defaults to development, set `APP_ENVIRONMENT=production` for production
 5. **Logging Level**: Adjust per environment in logger configuration
+6. **JWT Secret**: Set `JWT_SECRET` environment variable for token generation (defaults to insecure key in development)
+
+## Environment Variables
+
+Required environment variables:
+- `DATABASE_URL` - PostgreSQL connection string
+- `JWT_SECRET` - Secret key for JWT token signing
+
+Optional environment variables:
+- `APP_ENVIRONMENT` - Environment (development/staging/production)
+- `SERVER_PORT` - Server port (defaults to 3000)
+
+## Single Test Execution
+
+```bash
+# Run specific test with output
+cargo test test_name -- --nocapture
+
+# Run tests in specific module
+cargo test storage::users_storage::tests -- --nocapture
+
+# Run with filters
+cargo test -- test_create_user test_get_user -- --nocapture
+
+# Run sqlx tests with database setup
+DATABASE_URL="postgresql://user:pass@localhost/test" cargo test sqlx_test_name -- --nocapture
+```
+
+## Common Testing Patterns
+
+### Storage Layer Testing
+- **Test isolation**: Each test gets a clean database state
+- **Transaction rollback**: Use `#[sqlx::test]` for automatic cleanup
+- **Realistic data**: Use `fake` library for comprehensive test coverage
+- **Error cases**: Test database constraints and error handling
+
+### Service Layer Testing  
+- **Mock storage**: Use dependency injection for unit tests
+- **Business logic**: Test validation and transformation logic
+- **Error propagation**: Test proper error handling chain
+
+### Integration Testing
+- **End-to-end**: Test full request/response cycles
+- **Database integration**: Test with real PostgreSQL instance
+- **Authentication**: Test JWT token generation and validation
 
 This codebase prioritizes safety, performance, and maintainability following Rust best practices.
