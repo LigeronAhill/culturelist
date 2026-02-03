@@ -35,6 +35,8 @@ tokio = { version = "1.49.0", features = ["full"] }
 # utils
 chrono = { version = "0.4.43", features = ["serde"] }
 uuid = { version = "1.20.0", features = ["serde"] }
+argon2 = "0.5.3"
+validator = { version = "0.20.0", features = ["derive"] }
 
 # database
 [dependencies.sqlx]

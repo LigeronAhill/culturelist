@@ -1,6 +1,8 @@
+mod users_storage;
 use anyhow::Result;
 use config::Config;
 use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
+pub use users_storage::UsersStorage;
 
 pub async fn get_pool(config: &Config) -> Result<Pool<Postgres>> {
     let db_url = config.get_string("database.url")?;
