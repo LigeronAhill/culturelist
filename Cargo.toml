@@ -1,0 +1,51 @@
+[package]
+name = "culturelist"
+version = "0.1.0"
+edition = "2024"
+description = "Book Tracker"
+authors = ["Aleksandr Provotorov <provotorov@inbox.ru>"]
+
+[lib]
+path = "src/lib.rs"
+name = "app"
+
+[[bin]]
+path = "src/main.rs"
+name = "app"
+
+[dependencies]
+# errors
+anyhow = "1.0.100"
+
+# logging
+tracing = "0.1.44"
+tracing-subscriber = "0.3.22"
+log = "0.4.29"
+
+# serde
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+# config
+config = "0.15.19"
+
+# async
+tokio = { version = "1.49.0", features = ["full"] }
+
+# utils
+chrono = { version = "0.4.43", features = ["serde"] }
+uuid = { version = "1.20.0", features = ["serde"] }
+
+# database
+[dependencies.sqlx]
+version = "0.8.6"
+default-features = false
+features = [
+    "postgres",
+    "runtime-tokio",
+    "chrono",
+    "uuid",
+    "macros",
+    "migrate",
+    "tls-rustls",
+]

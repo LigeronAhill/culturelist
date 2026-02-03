@@ -1,0 +1,7 @@
+/target
+/configurations/production.toml
+*.env
+.idea
+.vscode
+.zed
+.DS_Store
