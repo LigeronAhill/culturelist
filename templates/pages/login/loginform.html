@@ -3,6 +3,12 @@
     data-on:submit="@post('/login')"
     data-init="$email_error = '{{email_error.clone().unwrap_or_default()}}'; $password_error = '{{password_error.clone().unwrap_or_default()}}';"
 >
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{csrf_token}}"
+        data-bind:csrf_token
+    />
     <label>
         Email
         <input

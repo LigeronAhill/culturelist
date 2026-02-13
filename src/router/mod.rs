@@ -8,6 +8,7 @@ use axum::{
     response::IntoResponse,
     routing::*,
 };
+use axum_csrf::{CsrfConfig, CsrfLayer, Key};
 use axum_session::{SessionLayer, SessionStore};
 use axum_session_auth::{AuthConfig, AuthSession, AuthSessionLayer};
 use axum_session_sqlx::SessionPgPool;
@@ -80,6 +81,12 @@ pub fn init(
         .allow_credentials(true);
     let compression_layer = CompressionLayer::new();
 
+    let cookie_key = Key::generate(); // Consider storing this in config for production
+    let csrf_config = CsrfConfig::default()
+        .with_key(Some(cookie_key))
+        .with_cookie_name("csrf-token") // optional: customize cookie name
+        .with_cookie_path("/".to_string()); // optional: customize cookie path
+
     let static_files_service = ServeDir::new("public")
         .append_index_html_on_directories(false)
         .precompressed_gzip()
@@ -98,6 +105,7 @@ pub fn init(
         .with_state(state)
         .layer(auth_layer)
         .layer(SessionLayer::new(session_store))
+        .layer(CsrfLayer::new(csrf_config))
         .layer(compression_layer)
         .layer(cors_layer)
         .layer(timeout_layer)

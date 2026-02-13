@@ -6,6 +6,7 @@ use axum::{
     extract::State,
     response::{IntoResponse, Redirect},
 };
+use axum_csrf::CsrfToken;
 use datastar::axum::ReadSignals;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -20,17 +21,23 @@ struct Login {
     email_error: Option<String>,
     password: String,
     password_error: Option<String>,
+    csrf_token: String,
 }
 
-pub async fn page(auth: AuthLayer) -> impl IntoResponse {
+pub async fn page(auth: AuthLayer, token: CsrfToken) -> impl IntoResponse {
     if auth.current_user.is_some() {
         return Redirect::to("/").into_response();
     }
-    Login {
-        title: "Login".to_string(),
-        ..Default::default()
-    }
-    .into_response()
+    let authenticity_token = token.authenticity_token().unwrap_or_default();
+    (
+        token,
+        Login {
+            title: "Login".to_string(),
+            csrf_token: authenticity_token,
+            ..Default::default()
+        },
+    )
+        .into_response()
 }
 
 #[derive(Template, WebTemplate, Deserialize, Debug, Serialize, Validate)]
@@ -42,6 +49,7 @@ pub struct LoginForm {
     #[validate(length(min = 8, max = 64), custom(function = "validate_password"))]
     pub password: String,
     pub password_error: Option<String>,
+    pub csrf_token: String,
 }
 
 fn validate_password(password: &str) -> Result<(), validator::ValidationError> {
@@ -76,9 +84,20 @@ fn validate_password(password: &str) -> Result<(), validator::ValidationError> {
 #[axum::debug_handler]
 pub async fn login_form(
     auth: AuthLayer,
+    token: CsrfToken,
     State(state): State<Arc<AppState>>,
     ReadSignals(form): ReadSignals<LoginForm>,
 ) -> impl IntoResponse {
+    if token.verify(&form.csrf_token).is_err() {
+        return LoginForm {
+            email: form.email,
+            email_error: Some("Invalid CSRF token".to_string()),
+            password: form.password,
+            password_error: None,
+            csrf_token: token.authenticity_token().unwrap_or_default(),
+        }
+        .into_response();
+    }
     if (form.email_error.as_ref().is_none()
         || form.email_error.as_ref().is_some_and(|e| e.is_empty()))
         && (form.password_error.as_ref().is_none()
@@ -102,6 +121,7 @@ pub async fn login_form(
                     email_error: None,
                     password: form.password,
                     password_error: Some(err),
+                    csrf_token: token.authenticity_token().unwrap_or_default(),
                 }
                 .into_response(),
                 _ => LoginForm {
@@ -109,6 +129,7 @@ pub async fn login_form(
                     email_error: None,
                     password: form.password,
                     password_error: Some(e.to_string()),
+                    csrf_token: token.authenticity_token().unwrap_or_default(),
                 }
                 .into_response(),
             },
@@ -119,11 +140,15 @@ pub async fn login_form(
             email_error: form.email_error,
             password: form.password,
             password_error: form.password_error,
+            csrf_token: token.authenticity_token().unwrap_or_default(),
         }
         .into_response()
     }
 }
-pub async fn login_form_validate(ReadSignals(data): ReadSignals<LoginForm>) -> impl IntoResponse {
+pub async fn login_form_validate(
+    token: CsrfToken,
+    ReadSignals(data): ReadSignals<LoginForm>,
+) -> impl IntoResponse {
     match data.validate() {
         Ok(_) => LoginForm {
             email: data.email,
@@ -138,6 +163,7 @@ pub async fn login_form_validate(ReadSignals(data): ReadSignals<LoginForm>) -> i
             } else {
                 data.password_error
             },
+            csrf_token: token.authenticity_token().unwrap_or_default(),
         },
         Err(err) => {
             let errors = err.into_errors();
@@ -145,17 +171,16 @@ pub async fn login_form_validate(ReadSignals(data): ReadSignals<LoginForm>) -> i
             let mut password_error = None;
             for (field, err) in errors {
                 if field == "email" {
-                    if let validator::ValidationErrorsKind::Field(_) = err {
-                        if !data.email.is_empty() {
-                            email_error = Some("Введите корректный email".into())
-                        }
+                    if let validator::ValidationErrorsKind::Field(_) = err
+                        && !data.email.is_empty()
+                    {
+                        email_error = Some("Введите корректный email".into())
                     }
-                } else if field == "password" {
-                    if let validator::ValidationErrorsKind::Field(_) = err {
-                        if !data.password.is_empty() {
-                            password_error = Some("Требования к паролю: Заглавная буква, цифра, спецсимвол, длина от 8 до 64 символов".into())
-                        }
-                    }
+                } else if field == "password"
+                    && let validator::ValidationErrorsKind::Field(_) = err
+                    && !data.password.is_empty()
+                {
+                    password_error = Some("Требования к паролю: Заглавная буква, цифра, спецсимвол, длина от 8 до 64 символов".into())
                 }
             }
             LoginForm {
@@ -163,6 +188,7 @@ pub async fn login_form_validate(ReadSignals(data): ReadSignals<LoginForm>) -> i
                 email_error,
                 password: data.password,
                 password_error,
+                csrf_token: token.authenticity_token().unwrap_or_default(),
             }
         }
     }

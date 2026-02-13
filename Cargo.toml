@@ -39,6 +39,7 @@ axum = { version = "0.8.8", features = ["macros", "multipart"] }
 axum_session = { version = "0.18.0", features = ["advanced"] }
 axum_session_auth = "0.18.0"
 axum_session_sqlx = { version = "0.7.0", features = ["postgres"] }
+axum_csrf = { version = "0.11.0", features = ["layer"] }
 tower = "0.5.3"
 
 # frontend
