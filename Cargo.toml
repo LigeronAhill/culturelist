@@ -15,7 +15,7 @@ name = "app"
 
 [dependencies]
 # errors
-anyhow = "1.0.100"
+anyhow = "1.0.101"
 
 # logging
 tracing = "0.1.44"
@@ -31,12 +31,14 @@ config = "0.15.19"
 
 # async
 tokio = { version = "1.49.0", features = ["full"] }
+async-trait = "0.1.89"
 
 # server
 tower-http = { version = "0.6.8", features = ["full"] }
 axum = { version = "0.8.8", features = ["macros", "multipart"] }
-axum_session = { version = "0.17.1", features = ["advanced"] }
-axum_session_sqlx = { version = "0.6.1", features = ["postgres"] }
+axum_session = { version = "0.18.0", features = ["advanced"] }
+axum_session_auth = "0.18.0"
+axum_session_sqlx = { version = "0.7.0", features = ["postgres"] }
 tower = "0.5.3"
 
 # frontend

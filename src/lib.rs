@@ -41,7 +41,7 @@ impl App {
                 .unwrap();
 
         // services
-        let users_storage = UsersStorage::new(self.pool.clone());
+        let users_storage = UsersStorage::new(self.pool.clone()).await?;
         let users_service = UsersService::new(users_storage);
 
         // app state
@@ -50,7 +50,7 @@ impl App {
         // server
         let addr = format!("0.0.0.0:{p}", p = self.port);
         let listener = tokio::net::TcpListener::bind(&addr).await?;
-        let service = router::init(&format!("http://{}", addr), session_store, app_state);
+        let service = router::init(&format!("http://{addr}"), session_store, app_state);
         axum::serve(listener, service)
             .with_graceful_shutdown(shutdown_signal())
             .await?;

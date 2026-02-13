@@ -80,7 +80,7 @@ drop-db:
 # add migration
 [group("database")]
 add-migration TABLE:
-    sqlx migrate add -r {{TABLE}} 
+    sqlx migrate add -r {{ TABLE }}
 
 # run migrations
 [group("database")]
@@ -100,7 +100,7 @@ prepare: lint fmt check-quality
 [group("git")]
 commit NAME: prepare
     git add .
-    git commit -m ""
+    git commit -m {{ NAME }}
 
 # push changes
 [group("git")]

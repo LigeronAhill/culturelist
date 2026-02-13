@@ -1,13 +1,15 @@
-use crate::AppState;
+use crate::{AppState, models::User, services::UsersService};
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::{
     Router,
+    handler::HandlerWithoutStateExt,
     http::{Method, header},
     response::IntoResponse,
-    routing::get,
+    routing::*,
 };
 use axum_session::{SessionLayer, SessionStore};
+use axum_session_auth::{AuthConfig, AuthSession, AuthSessionLayer};
 use axum_session_sqlx::SessionPgPool;
 use std::sync::Arc;
 use tower::ServiceBuilder;
@@ -16,6 +18,7 @@ use tower_http::{
     compression::CompressionLayer,
     cors::CorsLayer,
     request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
+    services::ServeDir,
     timeout::TimeoutLayer,
     trace::TraceLayer,
 };
@@ -25,11 +28,19 @@ mod pages;
 
 const REQUEST_ID_HEADER: &str = "cult-request-id";
 
+pub type AuthLayer = AuthSession<User, String, SessionPgPool, UsersService>;
+
 pub fn init(
     allowed_origin: &str,
     session_store: SessionStore<SessionPgPool>,
     app_state: AppState,
 ) -> Router {
+    let auth_config =
+        AuthConfig::<String>::default().with_anonymous_user_id(Some(uuid::Uuid::nil().to_string()));
+    let auth_layer = AuthSessionLayer::<User, String, SessionPgPool, UsersService>::new(Some(
+        app_state.users_service.clone(),
+    ))
+    .with_config(auth_config);
     let catch_panic_layer = CatchPanicLayer::new();
 
     let x_request_id = axum::http::HeaderName::from_static(REQUEST_ID_HEADER);
@@ -69,10 +80,23 @@ pub fn init(
         .allow_credentials(true);
     let compression_layer = CompressionLayer::new();
 
+    let static_files_service = ServeDir::new("public")
+        .append_index_html_on_directories(false)
+        .precompressed_gzip()
+        .precompressed_br()
+        .fallback(page_not_found.into_service());
+
     let state = Arc::new(app_state);
     Router::new()
         .route("/", get(pages::home::page))
+        .route(
+            "/login",
+            get(pages::login::page).post(pages::login::login_form),
+        )
+        .route("/login/validate", get(pages::login::login_form_validate))
+        .nest_service("/public", static_files_service)
         .with_state(state)
+        .layer(auth_layer)
         .layer(SessionLayer::new(session_store))
         .layer(compression_layer)
         .layer(cors_layer)

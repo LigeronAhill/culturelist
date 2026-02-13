@@ -84,9 +84,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.100"
+version = "1.0.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
+checksum = "5f0e0fee31ef5ed1ba1316088939cea399010ed7731dba877ed44aeb407a75ea"
 
 [[package]]
 name = "argon2"
@@ -197,6 +197,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-recursion"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b43422f69d8ff38f95f1b2bb76517c91589a924d1559a0e935d7c8ce0274c11"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "async-trait"
 version = "0.1.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -304,9 +315,9 @@ dependencies = [
 
 [[package]]
 name = "axum_session"
-version = "0.17.1"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "308f21ad5d767016f123ac6b6f45a23fe3c0c6234d95176f07297d578ba59693"
+checksum = "7815c0f6c12768f5f1fb1f1340d21c8b3ce9139bb0b8eb07a211b30f85fa1d50"
 dependencies = [
  "aes-gcm",
  "async-trait",
@@ -334,10 +345,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum_session_sqlx"
-version = "0.6.1"
+name = "axum_session_auth"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea8b8b1f0a6fb42ff3e5edc777b61b6686dc6e5d5109f841a57a3deed934b8be"
+checksum = "30ce1f03d6a0649a4ecb34a26f044a2d0bc0a38afcb5b413de1346549e835132"
+dependencies = [
+ "anyhow",
+ "async-recursion",
+ "async-trait",
+ "axum-core",
+ "axum_session",
+ "bytes",
+ "chrono",
+ "dashmap",
+ "futures",
+ "http",
+ "http-body",
+ "serde",
+ "tokio",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "axum_session_sqlx"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc5b7fde26383cda9cecce602d38d2c92351274a70c1f23570fb09b7acd6c159"
 dependencies = [
  "async-trait",
  "axum_session",
@@ -694,8 +729,10 @@ dependencies = [
  "argon2",
  "askama",
  "askama_web",
+ "async-trait",
  "axum",
  "axum_session",
+ "axum_session_auth",
  "axum_session_sqlx",
  "chrono",
  "config",
@@ -2951,9 +2988,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.46"
+version = "0.3.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9da98b7d9b7dad93488a84b8248efc35352b0b2657397d4167e7ad67e5d535e5"
+checksum = "743bd48c283afc0388f9b8827b976905fb217ad9e647fae3a379a9283c4def2c"
 dependencies = [
  "deranged",
  "itoa",
@@ -2972,9 +3009,9 @@ checksum = "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca"
 
 [[package]]
 name = "time-macros"
-version = "0.2.26"
+version = "0.2.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78cc610bac2dcee56805c99642447d4c5dbde4d01f752ffea0199aee1f601dc4"
+checksum = "2e70e4c5a0e0a8a4823ad65dfe1a6930e4f4d756dcd9dd7939022b5e8c501215"
 dependencies = [
  "num-conv",
  "time-core",

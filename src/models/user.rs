@@ -1,8 +1,12 @@
+use anyhow::Result;
+use axum_session_auth::Authentication;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
+
+use crate::services::UsersService;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct User {
@@ -13,6 +17,40 @@ pub struct User {
     pub last_name: Option<String>,
     pub bio: Option<String>,
     pub created_at: DateTime<Utc>,
+}
+
+impl Default for User {
+    fn default() -> Self {
+        Self {
+            id: Uuid::nil(),
+            username: String::new(),
+            email: String::new(),
+            first_name: None,
+            last_name: None,
+            bio: None,
+            created_at: Utc::now(),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl Authentication<User, String, UsersService> for User {
+    async fn load_user(userid: String, service: Option<&UsersService>) -> Result<User> {
+        let user = service.unwrap().get_by_id(&userid).await?;
+        Ok(user)
+    }
+
+    fn is_authenticated(&self) -> bool {
+        self.id != Uuid::nil()
+    }
+
+    fn is_active(&self) -> bool {
+        self.id != Uuid::nil()
+    }
+
+    fn is_anonymous(&self) -> bool {
+        self.id == Uuid::nil()
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Validate)]

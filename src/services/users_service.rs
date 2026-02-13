@@ -71,7 +71,7 @@ pub struct Claims {
     pub exp: usize, // expiration time
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UsersService {
     storage: UsersStorage,
 }

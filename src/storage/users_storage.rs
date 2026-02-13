@@ -2,14 +2,15 @@ use sqlx::{Pool, Postgres, Result};
 
 use crate::models::{CreateUser, UpdateUser, User, UserListResponse, UserSearch};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UsersStorage {
     pool: Pool<Postgres>,
 }
 
 impl UsersStorage {
-    pub fn new(pool: Pool<Postgres>) -> Self {
-        Self { pool }
+    pub async fn new(pool: Pool<Postgres>) -> Result<Self> {
+        let storage = Self { pool };
+        Ok(storage)
     }
     pub async fn create(&self, data: CreateUser) -> Result<User> {
         let password_hash =
@@ -161,7 +162,7 @@ mod tests {
     #[sqlx::test]
     async fn test_create_user_success(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user_data = create_fake_user();
         let created_user = storage.create(user_data.clone()).await?;
@@ -185,7 +186,7 @@ mod tests {
     #[sqlx::test]
     async fn test_get_by_id_success(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user_data = create_fake_user();
         let created_user = storage.create(user_data).await?;
@@ -200,7 +201,7 @@ mod tests {
     #[sqlx::test]
     async fn test_get_by_id_not_found(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let random_id = Uuid::new_v4();
         let found_user = storage.get_by_id(random_id).await?;
@@ -212,7 +213,7 @@ mod tests {
     #[sqlx::test]
     async fn test_get_by_email_success(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user_data = create_fake_user();
         let created_user = storage.create(user_data).await?;
@@ -227,7 +228,7 @@ mod tests {
     #[sqlx::test]
     async fn test_get_by_email_case_insensitive(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let mut user_data = create_fake_user();
         user_data.email = "Test@Example.COM".to_string();
@@ -243,7 +244,7 @@ mod tests {
     #[sqlx::test]
     async fn test_verify_user_success(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user_data = create_fake_user();
         let created_user = storage.create(user_data).await?;
@@ -259,7 +260,7 @@ mod tests {
     #[sqlx::test]
     async fn test_verify_user_wrong_password(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user_data = create_fake_user();
         let created_user = storage.create(user_data).await?;
@@ -275,7 +276,7 @@ mod tests {
     #[sqlx::test]
     async fn test_verify_user_not_found(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let is_valid = storage
             .verify_user("nonexistent@example.com", "Password123!")
@@ -288,7 +289,7 @@ mod tests {
     #[sqlx::test]
     async fn test_list_users_empty(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let search = UserSearch::default();
         let result = storage.list_users(search).await?;
@@ -304,7 +305,7 @@ mod tests {
     #[sqlx::test]
     async fn test_list_users_with_data(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         // Create multiple users
         for _ in 0..5 {
@@ -334,7 +335,7 @@ mod tests {
     #[sqlx::test]
     async fn test_list_users_pagination(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         // Create 5 users
         let mut created_emails = Vec::new();
@@ -380,7 +381,7 @@ mod tests {
     #[sqlx::test]
     async fn test_list_users_search_by_username(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         // Create users with predictable usernames
         let user1_data = CreateUser {
@@ -430,7 +431,7 @@ mod tests {
     #[sqlx::test]
     async fn test_list_users_search_by_email(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user1_data = CreateUser {
             username: "user1".to_string(),
@@ -469,7 +470,7 @@ mod tests {
     #[sqlx::test]
     async fn test_update_user_success(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user_data = create_fake_user();
         let created_user = storage.create(user_data).await?;
@@ -492,7 +493,7 @@ mod tests {
     #[sqlx::test]
     async fn test_update_user_not_found(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let update_data = create_fake_update_user();
         let random_id = Uuid::new_v4();
@@ -506,7 +507,7 @@ mod tests {
     #[sqlx::test]
     async fn test_delete_user_success(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let user_data = create_fake_user();
         let created_user = storage.create(user_data).await?;
@@ -525,7 +526,7 @@ mod tests {
     #[sqlx::test]
     async fn test_delete_user_not_found(pool: sqlx::PgPool) -> anyhow::Result<()> {
         sqlx::migrate!().run(&pool).await?;
-        let storage = UsersStorage::new(pool);
+        let storage = UsersStorage::new(pool).await?;
 
         let random_id = Uuid::new_v4();
         let deleted_id = storage.delete(random_id).await?;
