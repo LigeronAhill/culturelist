@@ -273,4 +273,8 @@ impl UsersService {
             .ok_or(UsersServiceError::NotFound)?;
         Ok(deleted_id)
     }
+    pub async fn check_username_exists(&self, username: &str) -> Result<bool, UsersServiceError> {
+        let existing = self.storage.get_by_username(username).await?;
+        Ok(existing.is_some())
+    }
 }

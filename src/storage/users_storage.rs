@@ -97,6 +97,12 @@ impl UsersStorage {
             .await?;
         Ok(result)
     }
+    pub async fn get_by_username(&self, username: &str) -> Result<Option<User>> {
+        let res = sqlx::query_file_as!(User, "queries/users/get_by_username.sql", username)
+            .fetch_optional(&self.pool)
+            .await?;
+        Ok(res)
+    }
 }
 
 fn hash_password(password: &str) -> argon2::password_hash::Result<String> {

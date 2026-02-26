@@ -6,8 +6,9 @@
 <p>Трекер книг</p>
 {% match user %} {% when Some(u) %}
 <p>Good: {{ u.username }}.</p>
+<a href="/signout">Sign Out</a>
 {% when None %}
 <p>Bad.</p>
 <a href="/login">Login</a>
-<a href="/signup">Signup</a>
+<a href="/signup">Sign Up</a>
 {% endmatch %} {% endblock content %}

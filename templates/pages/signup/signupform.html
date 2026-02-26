@@ -7,6 +7,7 @@
 {% let username = username.clone() %}
 {% let email = email.clone() %}
 {% let password = password.clone() %}
+{% let confirm_password = confirm_password.clone() %}
 {% let csrf_token = csrf_token.clone() %}
 <form id="signupform"
       data-init="$username_error = '{{username_error}}'; $email_error = '{{email_error}}'; $password_error = '{{password_error}}';"
@@ -14,15 +15,18 @@
 >
 	<input type="hidden"
 	       name="csrf_token"
-	       value="{{csrf_token}}"
+	       id="csrf_token"
 	       data-bind:csrf_token
+	       value="{{csrf_token}}"
 	>
 	<label>
 		Username
 		<input type="text"
 		       required
 		       aria-live="polite"
-		       aria-describedby="username-info"
+		       name="username"
+		       id="username"
+		       data-signals:username="'{{username}}'"
 		       data-bind:username
 		       data-on:input__debounce.500ms="@get('/signup/validate')"
 		       value="{{username}}"
@@ -32,9 +36,11 @@
 	<label>
 		Email
 		<input type="email"
+		       name="email"
+		       id="email"
 		       required
 		       aria-live="polite"
-		       aria-describedby="email-info"
+		       data-signals:email="'{{email}}'"
 		       data-bind:email
 		       data-on:input__debounce.500ms="@get('/signup/validate')"
 		       value="{{email}}"
@@ -44,9 +50,11 @@
 	<label>
 		Password
 		<input type="password"
+		       id="password"
+		       name="password"
 		       required
 		       aria-live="polite"
-		       aria-describedby="password-info"
+		       data-signals:password="'{{password}}'"
 		       data-bind:password
 		       data-on:input__debounce.500ms="@get('/signup/validate')"
 		       value="{{password}}"
@@ -54,9 +62,25 @@
 	</label>
 	<p id="password-error" class="error" data-text="$password_error"></p>
 	<label>
+		Confirm password
+		<input type="password"
+		       id="confirm_password"
+		       name="confirm_password"
+		       required
+		       aria-live="polite"
+		       data-signals:confirm_password="'{{confirm_password}}'"
+		       data-bind:confirm_password
+		       data-on:input__debounce.500ms="@get('/signup/validate')"
+		       value="{{confirm_password}}"
+		>
+	</label>
+	<label>
 		First name
 		<input type="text"
 		       aria-live="polite"
+		       id="first_name"
+		       name="first_name"
+		       data-signals:first_name="'{{first_name}}'"
 		       data-bind:first_name
 		       data-on:input__debounce.500ms="@get('/signup/validate')"
 		       value="{{first_name}}"
@@ -65,6 +89,9 @@
 	<label>
 		Last name
 		<input type="text"
+		       id="last_name"
+		       name="last_name"
+		       data-signals:last_name="'{{last_name}}'"
 		       aria-live="polite"
 		       data-bind:last_name
 		       data-on:input__debounce.500ms="@get('/signup/validate')"
@@ -73,13 +100,13 @@
 	</label>
 	<label>
 		Bio
-		<textarea data-bind:bio>
-			{{bio}}
+		<textarea id="bio" name="bio" data-signals:bio="'{{bio}}'" data-bind:bio>
 		</textarea>
-		>
 	</label>
-	<button class="success" type="submit">
-		<i class="material-symbols:person-add"></i>
+	<button type="submit">
 		Sign Up
+	</button>
+	<button type="reset" data-on:click="@get('/signup/reset')">
+		Reset
 	</button>
 </form>

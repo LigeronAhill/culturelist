@@ -9,7 +9,7 @@ use axum::{
 use axum_csrf::CsrfToken;
 use datastar::axum::ReadSignals;
 use serde::{Deserialize, Serialize};
-use tracing::{info, instrument, warn};
+use tracing::instrument;
 use validator::Validate;
 
 use crate::{AppState, models::SignUpRequest, router::AuthLayer};
@@ -20,7 +20,7 @@ struct SignupPage {
     title: String,
     form: SignupForm,
 }
-
+#[instrument(name = "sign up page", skip_all)]
 pub async fn page(auth: AuthLayer, token: CsrfToken) -> impl IntoResponse {
     if auth.current_user.is_some() {
         return Redirect::to("/").into_response();
@@ -53,6 +53,11 @@ pub struct SignupForm {
         custom(function = "validate_signup_password")
     )]
     pub password: String,
+    #[validate(
+        length(min = 8, max = 64),
+        custom(function = "validate_signup_password")
+    )]
+    pub confirm_password: String,
     pub password_error: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
@@ -90,6 +95,7 @@ fn validate_signup_password(password: &str) -> Result<(), validator::ValidationE
 }
 
 #[axum::debug_handler]
+#[instrument(name = "sign up form", skip_all)]
 pub async fn signup_form(
     auth: AuthLayer,
     token: CsrfToken,
@@ -125,7 +131,11 @@ pub async fn signup_form(
             }
             Err(e) => {
                 let mut nf = form.clone();
-                nf.username_error = Some(e.to_string());
+                if e.to_string().contains("already exists") {
+                    nf.email_error = Some("Почта уже зарегистрирована".into())
+                } else {
+                    nf.username_error = Some(e.to_string());
+                }
                 nf.csrf_token = csrt_token;
 
                 nf.into_response()
@@ -137,48 +147,85 @@ pub async fn signup_form(
         nf.into_response()
     }
 }
-#[instrument(name = "signup form validate", skip(token))]
+#[derive(Deserialize, Debug, Serialize, Validate, Default, Clone)]
+struct FormErrors<'a> {
+    username_error: &'a str,
+    email_error: &'a str,
+    password_error: &'a str,
+}
+#[axum::debug_handler]
+#[instrument(name = "signup form validate", skip_all)]
 pub async fn signup_form_validate(
-    token: CsrfToken,
+    State(state): State<Arc<AppState>>,
     ReadSignals(data): ReadSignals<SignupForm>,
 ) -> impl IntoResponse {
-    warn!("received: {data:#?}");
-    match data.validate() {
-        Ok(_) => {
-            let mut nf = data.clone();
-            nf.email_error = None;
-            let password_error = if data
-                .password_error
-                .as_ref()
-                .is_some_and(|e| e.contains("Требования"))
-            {
-                None
-            } else {
-                data.password_error
-            };
-            nf.bio = data.bio.as_ref().map(|b| b.trim().to_string());
-            nf.password_error = password_error;
-            nf.csrf_token = token.authenticity_token().unwrap_or_default();
-            nf.into_response()
-        }
-        Err(err) => {
-            let errors = err.into_errors();
-            let mut email_error = None;
-            let mut password_error = None;
-            for (field, _) in errors {
-                if field == "email" && !data.email.is_empty() {
-                    email_error = Some("Введите корректный email".into())
-                } else if field == "password" && !data.password.is_empty() {
-                    password_error = Some("Требования к паролю: Заглавная буква, цифра, спецсимвол, длина от 8 до 64 символов".into())
+    use {
+        asynk_strim::{Yielder, stream_fn},
+        axum::response::{Sse, sse::Event},
+        core::convert::Infallible,
+        datastar::prelude::PatchSignals,
+    };
+    Sse::new(stream_fn(
+        move |mut yielder: Yielder<Result<Event, Infallible>>| async move {
+            let mut errors = FormErrors::default();
+            if !data.username.is_empty() {
+                let username_exists = state
+                    .users_service
+                    .check_username_exists(&data.username)
+                    .await
+                    .unwrap_or_default();
+                if username_exists {
+                    errors.username_error = "Имя пользователя уже занято";
+                } else {
+                    errors.username_error = "";
                 }
+                let patch = PatchSignals::new(serde_json::to_string(&errors).unwrap_or_default());
+                let sse_event = patch.write_as_axum_sse_event();
+                yielder.yield_item(Ok(sse_event)).await;
             }
-            let mut nf = data.clone();
-            nf.bio = data.bio.as_ref().map(|b| b.trim().to_string());
-            nf.email_error = email_error;
-            nf.password_error = password_error;
-            nf.csrf_token = token.authenticity_token().unwrap_or_default();
-            info!("{nf:#?}");
-            nf.into_response()
-        }
-    }
+            if let Err(err) = data.validate() {
+                for (field, _) in err.errors() {
+                    if field == "email" && !data.email.is_empty() {
+                        errors.email_error = "Введите корректный email";
+                    } else if (field == "password" && !data.password.is_empty())
+                        || (field == "confirm_password" && !data.confirm_password.is_empty())
+                    {
+                        errors.password_error = "Требования к паролю: Заглавная буква, цифра, спецсимвол, длина от 8 до 64 символов";
+                    }
+                }
+                let patch = PatchSignals::new(serde_json::to_string(&errors).unwrap_or_default());
+                let sse_event = patch.write_as_axum_sse_event();
+                yielder.yield_item(Ok(sse_event)).await;
+            } else if !data.password.is_empty()
+                && !data.confirm_password.is_empty()
+                && data.password != data.confirm_password
+            {
+                errors.password_error = "Пароли не совпадают";
+                let patch = PatchSignals::new(serde_json::to_string(&errors).unwrap_or_default());
+                let sse_event = patch.write_as_axum_sse_event();
+                yielder.yield_item(Ok(sse_event)).await;
+            } else {
+                let patch = PatchSignals::new(serde_json::to_string(&errors).unwrap_or_default());
+                let sse_event = patch.write_as_axum_sse_event();
+                yielder.yield_item(Ok(sse_event)).await;
+            }
+        },
+    ))
+}
+#[instrument(name = "signup form reset", skip_all)]
+pub async fn signup_form_reset() -> impl IntoResponse {
+    use {
+        asynk_strim::{Yielder, stream_fn},
+        axum::response::{Sse, sse::Event},
+        core::convert::Infallible,
+        datastar::prelude::PatchSignals,
+    };
+    Sse::new(stream_fn(
+        move |mut yielder: Yielder<Result<Event, Infallible>>| async move {
+            let errors = FormErrors::default();
+            let patch = PatchSignals::new(serde_json::to_string(&errors).unwrap_or_default());
+            let sse_event = patch.write_as_axum_sse_event();
+            yielder.yield_item(Ok(sse_event)).await;
+        },
+    ))
 }

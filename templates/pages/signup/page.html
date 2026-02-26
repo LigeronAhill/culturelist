@@ -16,5 +16,6 @@
 {% let username = form.username.clone() %}
 {% let email = form.email.clone() %}
 {% let password = form.password.clone() %}
+{% let confirm_password = form.confirm_password.clone() %}
 {% let csrf_token = form.csrf_token.clone() %}
 {% include "pages/signup/signupform.html" %} {% endblock content %}

@@ -5,7 +5,7 @@ use axum::{
     Router,
     handler::HandlerWithoutStateExt,
     http::{Method, header},
-    response::IntoResponse,
+    response::{IntoResponse, Redirect},
     routing::*,
 };
 use axum_csrf::{CsrfConfig, CsrfLayer, Key};
@@ -96,6 +96,7 @@ pub fn init(
     let state = Arc::new(app_state);
     Router::new()
         .route("/", get(pages::home::page))
+        .route("/signout", get(sign_out))
         .route(
             "/login",
             get(pages::login::page).post(pages::login::login_form),
@@ -106,11 +107,13 @@ pub fn init(
             get(pages::signup::page).post(pages::signup::signup_form),
         )
         .route("/signup/validate", get(pages::signup::signup_form_validate))
+        .route("/signup/reset", get(pages::signup::signup_form_reset))
         .nest_service("/public", static_files_service)
         .with_state(state)
         .layer(auth_layer)
         .layer(SessionLayer::new(session_store))
         .layer(CsrfLayer::new(csrf_config))
+        .layer(TraceLayer::new_for_http())
         .layer(compression_layer)
         .layer(cors_layer)
         .layer(timeout_layer)
@@ -129,4 +132,9 @@ async fn page_not_found(uri: axum::http::Uri) -> impl IntoResponse {
     PageNotFound {
         uri: uri.to_string(),
     }
+}
+
+async fn sign_out(auth: AuthLayer) -> impl IntoResponse {
+    auth.logout_user();
+    Redirect::to("/")
 }

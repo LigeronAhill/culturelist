@@ -8,7 +8,7 @@ pub fn init(config: &Config) -> Result<()> {
     match env.as_str() {
         "production" => {
             let subscriber = tracing_subscriber::FmtSubscriber::builder()
-                .with_max_level(tracing::Level::INFO)
+                .with_max_level(tracing::Level::WARN)
                 .with_file(true)
                 .with_line_number(true)
                 .with_target(false)
@@ -18,7 +18,7 @@ pub fn init(config: &Config) -> Result<()> {
         }
         _ => {
             let subscriber = tracing_subscriber::FmtSubscriber::builder()
-                .with_max_level(tracing::Level::DEBUG)
+                .with_max_level(tracing::Level::INFO)
                 .with_file(true)
                 .with_line_number(true)
                 .with_target(false)
