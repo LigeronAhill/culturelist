@@ -1,6 +1,6 @@
 {% extends "layout/base.html" %} {% block head %}
 <title>КультурЛист | Главная</title>
-<meta name="description" content="Трекер книг" />
+<meta name="description" content="Трекер книг">
 {% endblock head %} {% block content %}
 <h1>{{ title }}</h1>
 <p>Трекер книг</p>
@@ -9,4 +9,5 @@
 {% when None %}
 <p>Bad.</p>
 <a href="/login">Login</a>
+<a href="/signup">Signup</a>
 {% endmatch %} {% endblock content %}

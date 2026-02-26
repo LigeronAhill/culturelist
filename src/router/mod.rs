@@ -101,6 +101,11 @@ pub fn init(
             get(pages::login::page).post(pages::login::login_form),
         )
         .route("/login/validate", get(pages::login::login_form_validate))
+        .route(
+            "/signup",
+            get(pages::signup::page).post(pages::signup::signup_form),
+        )
+        .route("/signup/validate", get(pages::signup::signup_form_validate))
         .nest_service("/public", static_files_service)
         .with_state(state)
         .layer(auth_layer)

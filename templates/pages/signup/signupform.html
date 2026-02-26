@@ -1,0 +1,85 @@
+{% let email_error = email_error.clone().unwrap_or_default() %}
+{% let password_error = password_error.clone().unwrap_or_default() %}
+{% let username_error = username_error.clone().unwrap_or_default() %}
+{% let first_name = first_name.clone().unwrap_or_default() %}
+{% let last_name = last_name.clone().unwrap_or_default() %}
+{% let bio = bio.clone().unwrap_or_default().trim().to_string() %}
+{% let username = username.clone() %}
+{% let email = email.clone() %}
+{% let password = password.clone() %}
+{% let csrf_token = csrf_token.clone() %}
+<form id="signupform"
+      data-init="$username_error = '{{username_error}}'; $email_error = '{{email_error}}'; $password_error = '{{password_error}}';"
+      data-on:submit="@post('/signup')"
+>
+	<input type="hidden"
+	       name="csrf_token"
+	       value="{{csrf_token}}"
+	       data-bind:csrf_token
+	>
+	<label>
+		Username
+		<input type="text"
+		       required
+		       aria-live="polite"
+		       aria-describedby="username-info"
+		       data-bind:username
+		       data-on:input__debounce.500ms="@get('/signup/validate')"
+		       value="{{username}}"
+		>
+	</label>
+	<p id="username-error" class="error" data-text="$username_error"></p>
+	<label>
+		Email
+		<input type="email"
+		       required
+		       aria-live="polite"
+		       aria-describedby="email-info"
+		       data-bind:email
+		       data-on:input__debounce.500ms="@get('/signup/validate')"
+		       value="{{email}}"
+		>
+	</label>
+	<p id="email-error" class="error" data-text="$email_error"></p>
+	<label>
+		Password
+		<input type="password"
+		       required
+		       aria-live="polite"
+		       aria-describedby="password-info"
+		       data-bind:password
+		       data-on:input__debounce.500ms="@get('/signup/validate')"
+		       value="{{password}}"
+		>
+	</label>
+	<p id="password-error" class="error" data-text="$password_error"></p>
+	<label>
+		First name
+		<input type="text"
+		       aria-live="polite"
+		       data-bind:first_name
+		       data-on:input__debounce.500ms="@get('/signup/validate')"
+		       value="{{first_name}}"
+		>
+	</label>
+	<label>
+		Last name
+		<input type="text"
+		       aria-live="polite"
+		       data-bind:last_name
+		       data-on:input__debounce.500ms="@get('/signup/validate')"
+		       value="{{last_name}}"
+		>
+	</label>
+	<label>
+		Bio
+		<textarea data-bind:bio>
+			{{bio}}
+		</textarea>
+		>
+	</label>
+	<button class="success" type="submit">
+		<i class="material-symbols:person-add"></i>
+		Sign Up
+	</button>
+</form>

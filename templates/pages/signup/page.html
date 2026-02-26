@@ -1,0 +1,20 @@
+{% extends "layout/base.html" %} {% block head %}
+<title>CultureList | {{ title }}</title>
+<meta name="description"
+      content="Трекер книг"
+>
+{% endblock head %} {% block content %}
+<h1>{{ title }}</h1>
+<p>Трекер книг</p>
+<a href="/">Home</a>
+{% let email_error = form.email_error.clone() %}
+{% let password_error = form.password_error.clone() %}
+{% let username_error = form.username_error.clone() %}
+{% let first_name = form.first_name.clone() %}
+{% let last_name = form.last_name.clone() %}
+{% let bio = form.bio.clone() %}
+{% let username = form.username.clone() %}
+{% let email = form.email.clone() %}
+{% let password = form.password.clone() %}
+{% let csrf_token = form.csrf_token.clone() %}
+{% include "pages/signup/signupform.html" %} {% endblock content %}

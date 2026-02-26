@@ -1,42 +1,38 @@
-<form
-    id="demo"
-    data-on:submit="@post('/login')"
-    data-init="$email_error = '{{email_error.clone().unwrap_or_default()}}'; $password_error = '{{password_error.clone().unwrap_or_default()}}';"
+<form id="loginform"
+      data-on:submit="@post('/login')"
+      data-init="$email_error = '{{email_error.clone().unwrap_or_default()}}'; $password_error = '{{password_error.clone().unwrap_or_default()}}';"
 >
-    <input
-        type="hidden"
-        name="csrf_token"
-        value="{{csrf_token}}"
-        data-bind:csrf_token
-    />
-    <label>
-        Email
-        <input
-            type="email"
-            required
-            aria-live="polite"
-            aria-describedby="email-info"
-            data-bind:email
-            data-on:input__debounce.500ms="@get('/login/validate')"
-            value="{{email}}"
-        />
-    </label>
-    <p id="email-error" class="error" data-text="$email_error"></p>
-    <label>
-        Password
-        <input
-            type="password"
-            required
-            aria-live="polite"
-            aria-describedby="password-info"
-            data-bind:password
-            data-on:input__debounce.500ms="@get('/login/validate')"
-            value="{{password}}"
-        />
-    </label>
-    <p id="password-error" class="error" data-text="$password_error"></p>
-    <button class="success" type="submit">
-        <i class="material-symbols:person-add"></i>
-        Sign In
-    </button>
+	<input type="hidden"
+	       name="csrf_token"
+	       value="{{csrf_token}}"
+	       data-bind:csrf_token
+	>
+	<label>
+		Email
+		<input type="email"
+		       required
+		       aria-live="polite"
+		       aria-describedby="email-info"
+		       data-bind:email
+		       data-on:input__debounce.500ms="@get('/login/validate')"
+		       value="{{email}}"
+		>
+	</label>
+	<p id="email-error" class="error" data-text="$email_error"></p>
+	<label>
+		Password
+		<input type="password"
+		       required
+		       aria-live="polite"
+		       aria-describedby="password-info"
+		       data-bind:password
+		       data-on:input__debounce.500ms="@get('/login/validate')"
+		       value="{{password}}"
+		>
+	</label>
+	<p id="password-error" class="error" data-text="$password_error"></p>
+	<button class="success" type="submit">
+		<i class="material-symbols:person-add"></i>
+		Sign In
+	</button>
 </form>
