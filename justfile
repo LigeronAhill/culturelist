@@ -5,8 +5,8 @@ set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
 set dotenv-load := true
 
 # watch application
-[group("app")]
-default: dev
+[group("just")]
+default: help
 
 # run application
 [group("app")]
@@ -15,7 +15,7 @@ run:
 
 # watch application
 [group("app")]
-dev:
+watch:
     watchexec -r -e rs,html,css -- cargo run
 
 # list available commands

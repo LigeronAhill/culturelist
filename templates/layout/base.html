@@ -5,12 +5,14 @@
 		<meta name="viewport"
 		      content="width=device-width, initial-scale=1.0"
 		>
-		<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
-		{% block head %}
-		<title>My Title</title>
-		{% endblock head %}
+		<script type="module" src="/public/assets/js/datastar.js"></script>
+		<title>{{ title }} | КультурЛист</title>
+		<meta name="description" content="{{ description }}">
+		<link rel="stylesheet" href="/public/assets/css/main.css">
 	</head>
 	<body>
-		{% block content %} {% endblock content %}
+		{% include "layout/header.html" %}
+		<main>{% block content %} {% endblock content %}</main>
+		{% include "layout/footer.html" %}
 	</body>
 </html>

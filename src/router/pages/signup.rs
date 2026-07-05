@@ -9,31 +9,40 @@ use axum::{
 use axum_csrf::CsrfToken;
 use datastar::axum::ReadSignals;
 use serde::{Deserialize, Serialize};
-use tracing::instrument;
+use tracing::{error, info, instrument};
 use validator::Validate;
 
-use crate::{AppState, models::SignUpRequest, router::AuthLayer};
+use crate::{
+    AppState,
+    models::{SignUpRequest, User},
+    router::AuthLayer,
+};
 
 #[derive(Template, WebTemplate, Default)]
 #[template(path = "pages/signup/page.html")]
 struct SignupPage {
     title: String,
+    description: String,
     form: SignupForm,
+    user: Option<User>,
 }
 #[instrument(name = "sign up page", skip_all)]
 pub async fn page(auth: AuthLayer, token: CsrfToken) -> impl IntoResponse {
-    if auth.current_user.is_some() {
+    let user = auth.current_user;
+    if user.as_ref().is_some() {
         return Redirect::to("/").into_response();
     }
     let authenticity_token = token.authenticity_token().unwrap_or_default();
     (
         token,
         SignupPage {
-            title: "Signup".to_string(),
+            title: "Зарегистрироваться".to_string(),
+            description: "".to_string(),
             form: SignupForm {
                 csrf_token: authenticity_token,
                 ..Default::default()
             },
+            user,
         },
     )
         .into_response()
@@ -102,6 +111,8 @@ pub async fn signup_form(
     State(state): State<Arc<AppState>>,
     ReadSignals(form): ReadSignals<SignupForm>,
 ) -> impl IntoResponse {
+    info!("sign up post requested");
+    info!("{form:#?}");
     if token.verify(&form.csrf_token).is_err() {
         let mut nf = form.clone();
         nf.username_error = Some("wrong csrf".into());
@@ -130,6 +141,7 @@ pub async fn signup_form(
                 Redirect::to("/").into_response()
             }
             Err(e) => {
+                error!("{e:?}");
                 let mut nf = form.clone();
                 if e.to_string().contains("already exists") {
                     nf.email_error = Some("Почта уже зарегистрирована".into())
@@ -142,6 +154,9 @@ pub async fn signup_form(
             }
         }
     } else {
+        let ee = form.email_error.as_ref();
+        let pe = form.password_error.as_ref();
+        error!("email error: {ee:?}\npassword error: {pe:?}");
         let mut nf = form.clone();
         nf.csrf_token = token.authenticity_token().unwrap();
         nf.into_response()
@@ -184,7 +199,7 @@ pub async fn signup_form_validate(
                 yielder.yield_item(Ok(sse_event)).await;
             }
             if let Err(err) = data.validate() {
-                for (field, _) in err.errors() {
+                for field in err.errors().keys() {
                     if field == "email" && !data.email.is_empty() {
                         errors.email_error = "Введите корректный email";
                     } else if (field == "password" && !data.password.is_empty())

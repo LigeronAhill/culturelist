@@ -8,6 +8,7 @@ use crate::{models::User, router::AuthLayer};
 #[template(path = "pages/home/page.html")]
 struct Home<'a> {
     title: &'a str,
+    description: &'a str,
     user: Option<User>,
 }
 
@@ -15,6 +16,7 @@ pub async fn page(auth: AuthLayer) -> impl IntoResponse {
     let current = auth.current_user;
     Home {
         title: "КультурЛист | Главная",
+        description: "Это главная страница",
         user: current,
     }
 }

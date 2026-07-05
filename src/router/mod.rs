@@ -125,12 +125,19 @@ pub fn init(
 #[derive(Template, WebTemplate)]
 #[template(path = "pages/notfound/page.html")]
 struct PageNotFound {
+    title: String,
+    description: String,
     uri: String,
+    user: Option<User>,
 }
 
-async fn page_not_found(uri: axum::http::Uri) -> impl IntoResponse {
+async fn page_not_found(auth: AuthLayer, uri: axum::http::Uri) -> impl IntoResponse {
+    let user = auth.current_user;
     PageNotFound {
+        title: "Страница не найдена".to_string(),
+        description: "".to_string(),
         uri: uri.to_string(),
+        user,
     }
 }
 

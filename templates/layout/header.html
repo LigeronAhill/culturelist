@@ -1,0 +1,28 @@
+<header>
+	<div class="header">
+		<div class="logo">
+			<img src="/public/assets/icons/logo.svg" alt="logo">
+			<h1>КультурЛист</h1>
+		</div>
+		<div class="navigation">
+			<nav>
+				<ul>
+					<li><a href="/">Главная</a></li>
+					<li><a href="/authors">Авторы</a></li>
+					<li><a href="/reading">Читаю</a></li>
+					<li><a href="/pending">Прочитать</a></li>
+					<li><a href="/done">Прочитанные</a></li>
+				</ul>
+			</nav>
+			<div class=profile>
+				{% if user.is_some() %}
+				{% let user_id = user.as_ref().unwrap().id.to_string() %}
+
+				<a href="/user/{{ user_id }}">Профиль</a>
+				{% else %}
+				<a href="/login">Войти</a>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</header>

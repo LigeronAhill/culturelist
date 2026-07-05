@@ -11,29 +11,38 @@ use datastar::axum::ReadSignals;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::{AppState, models::SignInRequest, router::AuthLayer};
+use crate::{
+    AppState,
+    models::{SignInRequest, User},
+    router::AuthLayer,
+};
 
 #[derive(Template, WebTemplate, Default)]
 #[template(path = "pages/login/page.html")]
 struct Login {
     title: String,
+    description: String,
     email: String,
     email_error: Option<String>,
     password: String,
     password_error: Option<String>,
     csrf_token: String,
+    user: Option<User>,
 }
 
 pub async fn page(auth: AuthLayer, token: CsrfToken) -> impl IntoResponse {
-    if auth.current_user.is_some() {
+    let user = auth.current_user;
+    if user.as_ref().is_some() {
         return Redirect::to("/").into_response();
     }
     let authenticity_token = token.authenticity_token().unwrap_or_default();
     (
         token,
         Login {
-            title: "Login".to_string(),
+            title: "Войти".to_string(),
+            description: "".to_string(),
             csrf_token: authenticity_token,
+            user,
             ..Default::default()
         },
     )

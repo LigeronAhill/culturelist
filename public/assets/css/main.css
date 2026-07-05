@@ -1,0 +1,181 @@
+/* yanone-kaffeesatz-200 - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Yanone Kaffeesatz";
+	font-style: normal;
+	font-weight: 200;
+	src: url("/public/assets/fonts/yanone/yanone-kaffeesatz-v34-cyrillic_latin-200.woff2")
+		format("woff2");
+}
+/* yanone-kaffeesatz-300 - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Yanone Kaffeesatz";
+	font-style: normal;
+	font-weight: 300;
+	src: url("/public/assets/fonts/yanone/yanone-kaffeesatz-v34-cyrillic_latin-300.woff2")
+		format("woff2");
+}
+/* yanone-kaffeesatz-regular - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Yanone Kaffeesatz";
+	font-style: normal;
+	font-weight: 400;
+	src: url("/public/assets/fonts/yanone/yanone-kaffeesatz-v34-cyrillic_latin-regular.woff2")
+		format("woff2");
+}
+/* yanone-kaffeesatz-500 - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Yanone Kaffeesatz";
+	font-style: normal;
+	font-weight: 500;
+	src: url("/public/assets/fonts/yanone/yanone-kaffeesatz-v34-cyrillic_latin-500.woff2")
+		format("woff2");
+}
+/* yanone-kaffeesatz-600 - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Yanone Kaffeesatz";
+	font-style: normal;
+	font-weight: 600;
+	src: url("/public/assets/fonts/yanone/yanone-kaffeesatz-v34-cyrillic_latin-600.woff2")
+		format("woff2");
+}
+/* yanone-kaffeesatz-700 - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Yanone Kaffeesatz";
+	font-style: normal;
+	font-weight: 700;
+	src: url("/public/assets/fonts/yanone/yanone-kaffeesatz-v34-cyrillic_latin-700.woff2")
+		format("woff2");
+}
+
+/* forum-regular - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Forum";
+	font-style: normal;
+	font-weight: 400;
+	src: url("/public/assets/fonts/forum/forum-v19-cyrillic_latin-regular.woff2")
+		format("woff2");
+}
+
+/* chocolate-classical-sans-regular - cyrillic_latin */
+@font-face {
+	font-display: swap;
+	font-family: "Chocolate Classical Sans";
+	font-style: normal;
+	font-weight: 400;
+	src: url("public/assets/fonts/chocolate/chocolate-classical-sans-v16-cyrillic_latin-regular.woff2")
+		format("woff2");
+}
+
+:root {
+	--font-logo: "Yanone Kaffeesatz", sans-serif;
+	--font-serif: "Forum", serif;
+	--font-sans: "Chocolate Classical Sans", sans-serif;
+	--base-blue: #1b3764;
+	--accent-yellow: #ffca42;
+	--base-content: #f6f8fc;
+	--base-content-muted: #b4c7e7;
+	--max-width: 1400px;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+a,
+a:visited,
+a:hover,
+a:active {
+	color: inherit;
+	text-decoration: none;
+	background: transparent;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-serif);
+}
+
+body {
+	font-family: var(--font-sans);
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	min-height: 100svh;
+}
+
+header {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background-color: var(--base-blue);
+	.header {
+		width: 100%;
+		max-width: var(--max-width);
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		align-items: center;
+		color: var(--base-content);
+		.logo {
+			h1 {
+				font-family: var(--font-logo);
+			}
+			display: flex;
+			align-items: center;
+			justify-content: start;
+			gap: 1rem;
+		}
+		.navigation {
+			padding: 1rem;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			font-family: var(--font-sans);
+			font-size: 1.2rem;
+			nav {
+				ul {
+					list-style: none;
+					display: flex;
+					justify-content: center;
+					gap: 2rem;
+					li:hover {
+						color: var(--base-content-muted);
+					}
+				}
+			}
+			.profile {
+				position: relative;
+				height: 4rem;
+				min-width: 10rem;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-block: -0.5rem;
+				margin-left: 2rem;
+				background-color: var(--accent-yellow);
+				color: var(--base-blue);
+				border-radius: 0.5rem;
+				a {
+					position: absolute;
+					inset: 0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+			}
+		}
+	}
+}
